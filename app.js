@@ -17,6 +17,10 @@ const user = {username: 'admin', password: '$2a$12$8vr1WQ8l705cQqU338B/iuOHQSuG6
 
 setCredentials();
 
+
+
+/**---------------------    ROUTES    ----------------------------------------------------- */
+
 app.get('/', (request, response) => {
     response.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
@@ -52,6 +56,11 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}`);
 });
+
+
+
+
+/**---------------------    HELPER FUNCTIONS    ------------------------------------------- */
 
 function computeDamage(toughness, armour, damageDealt, weaponAP) {
 
