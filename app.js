@@ -11,7 +11,9 @@ app.use(cors());
 
 const saltRounds = 12;
 const secretKey = 'S6nCNrmsX7vFeVIw4KlDTTUYLWRbflLj';
-const user = {username: 'admin', password: '$2a$12$8vr1WQ8l705cQqU338B/iuOHQSuG6ZcF7zj5E1PXqzNIJFBqcj5Sq'};         // Set with runtime args later
+const user = {username: 'admin', password: '$2a$12$8vr1WQ8l705cQqU338B/iuOHQSuG6ZcF7zj5E1PXqzNIJFBqcj5Sq'};         // Default password
+
+setCredentials();
 
 app.get('/', (request, response) => {
     response.sendFile(path.join(__dirname, 'views', 'login.html'));
@@ -19,8 +21,9 @@ app.get('/', (request, response) => {
 
 app.post('/login', async (request, response) => {
     const { username, password } = request.body;
-   
-    //const hash = await hashPassword(password);
+
+    //console.log("Saved Credentials: " + user.username + " " + user.password);
+    //console.log("Given Credentials: " + username + " " + password);
 
     bcrypt.compare(password, user.password, (err, result) => {
         if (username === user.username && result) {
@@ -35,7 +38,7 @@ app.post('/login', async (request, response) => {
 });
 
 app.get('/calcView', (request, response) => {
-    response.sendFile(path.join(__dirname, 'views', 'index.html'));
+    response.sendFile(path.join(__dirname, 'views', 'calc.html'));
 });
 
 app.get('/calcDamage', (request, response) => {
@@ -65,4 +68,24 @@ function computeDamage(toughness, armour, damageDealt, weaponAP) {
     }
 
     return damageDealt;
+}
+
+async function hashPassword(password) {
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hash = await bcrypt.hash(password, salt);
+    return hash;
+}
+
+async function setCredentials() {
+
+    if (process.argv.length === 4) {
+        const hashP = await hashPassword(process.argv[3]);
+        //user = {username: process.argv[2], password: hashP};
+        user.username = process.argv[2];
+        user.password = hashP;
+        //console.log(user.username, user.password);
+    }
+    else {
+        console.log("Invalid number of command line arguments, using default --  # of command args should be two (username, password)");
+    }
 }
