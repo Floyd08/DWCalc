@@ -4,9 +4,11 @@ const cors = require('cors');
 const path = require('path'); 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cookieParser());
 app.use(cors());
 
 const saltRounds = 12;
@@ -22,9 +24,6 @@ app.get('/', (request, response) => {
 app.post('/login', async (request, response) => {
     const { username, password } = request.body;
 
-    //console.log("Saved Credentials: " + user.username + " " + user.password);
-    //console.log("Given Credentials: " + username + " " + password);
-
     bcrypt.compare(password, user.password, (err, result) => {
         if (username === user.username && result) {
             const token = jwt.sign({username: user.username}, secretKey, { expiresIn: '4h' });
@@ -37,7 +36,8 @@ app.post('/login', async (request, response) => {
     });
 });
 
-app.get('/calcView', (request, response) => {
+app.get('/calcView', authenticate, (request, response) => {
+
     response.sendFile(path.join(__dirname, 'views', 'calc.html'));
 });
 
@@ -50,7 +50,7 @@ app.get('/calcDamage', (request, response) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log('Server started on http://localhost:${PORT}');
+    console.log(`Server started on http://localhost:${PORT}`);
 });
 
 function computeDamage(toughness, armour, damageDealt, weaponAP) {
@@ -80,12 +80,25 @@ async function setCredentials() {
 
     if (process.argv.length === 4) {
         const hashP = await hashPassword(process.argv[3]);
-        //user = {username: process.argv[2], password: hashP};
         user.username = process.argv[2];
         user.password = hashP;
-        //console.log(user.username, user.password);
     }
     else {
         console.log("Invalid number of command line arguments, using default --  # of command args should be two (username, password)");
+    }
+}
+
+function authenticate(request, response, next) {
+
+    if (!request.cookies.jwt) {
+        return response.status(401).json({message: "Token Missing -- This probably means you didn't log in before accessing this page"});
+    }
+
+    const dToken = jwt.verify(request.cookies.jwt, secretKey);
+    if (dToken.username === user.username) {
+        next();
+    }
+    else {
+        response.status(403).json({ message: "Access denied" });
     }
 }
