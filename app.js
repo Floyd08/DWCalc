@@ -52,7 +52,7 @@ app.get('/calcDamage', (request, response) => {
     response.json(newDamage);
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.argv[4] || 3000;
 app.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}`);
 });
@@ -87,13 +87,13 @@ async function hashPassword(password) {
 
 async function setCredentials() {
 
-    if (process.argv.length === 4) {
+    if (process.argv.length === 4 || process.argv.length === 5) {
         const hashP = await hashPassword(process.argv[3]);
         user.username = process.argv[2];
         user.password = hashP;
     }
     else {
-        console.log("Invalid number of command line arguments, using default --  # of command args should be two (username, password)");
+        console.log("Invalid number of command line arguments, using default --  # of command args can be two or three in this order: username, password, port");
     }
 }
 
